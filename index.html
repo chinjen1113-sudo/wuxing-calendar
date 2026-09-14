@@ -69,7 +69,10 @@
     .date-chip { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; white-space: nowrap; }
     .date-chip b { color: var(--gold-soft); font-size: 15px; font-weight: 500; }
 
-    .dashboard { display: grid; grid-template-columns: minmax(0, 1.37fr) minmax(370px, .83fr); gap: 16px; align-items: start; }
+    .dashboard { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; align-items: stretch; }
+    .left-column, .right-column { display: grid; gap: 16px; min-width: 0; height: 100%; }
+    .left-column { grid-template-rows: auto minmax(0, 1fr) auto; }
+    .right-column { grid-template-rows: auto minmax(0, 1fr); }
     .panel { background: rgba(25,37,40,.86); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 16px 50px rgba(0,0,0,.12); }
     .calendar-panel { padding: 20px; }
     .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -115,12 +118,14 @@
     .today-link { border: 0; padding: 0; background: none; color: var(--gold); font-size: 12px; cursor: pointer; }
     .today-link:hover { color: var(--gold-soft); }
 
-    .detail-column { display: grid; gap: 16px; }
     .detail-hero { padding: 22px 22px 20px; position: relative; overflow: hidden; }
     .detail-hero::after { content: "玄"; position: absolute; right: 17px; top: -28px; font: 140px/1 "Noto Serif SC", serif; color: rgba(233,191,117,.05); pointer-events: none; }
     .detail-date { display: flex; justify-content: space-between; align-items: start; position: relative; z-index: 1; }
     .detail-date h2 { margin: 0; font: 400 25px "Noto Serif SC", serif; letter-spacing: .04em; }
     .detail-date p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .module-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 15px; position: relative; z-index: 1; }
+    .module-heading h3 { margin: 0; font: 400 16px "Noto Serif SC", serif; letter-spacing: .06em; }
+    .module-heading span { color: var(--faint); font-size: 10px; }
     .focus-tag { color: var(--ink); background: var(--gold); padding: 5px 8px; border-radius: 5px; font-size: 10px; letter-spacing: .1em; }
     .pill-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 17px; position: relative; z-index: 1; }
     .four-pill-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 7px; }
@@ -148,38 +153,41 @@
     .bar { height: 5px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
     .bar i { display: block; height: 100%; border-radius: inherit; transition: width .35s ease; }
     .energy-value { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .relations-panel { padding-bottom: 20px; }
-    .flow-block { padding: 14px 20px 2px; }
+    .relations-panel { padding-bottom: 24px; min-width: 0; }
+    .relations-panel .section-title { padding-top: 22px; }
+    .relations-panel .section-title h3 { font-size: 20px; }
+    .relations-panel .section-title span { font-size: 12px; }
+    .flow-block { padding: 22px 24px 4px; }
     .flow-cycle { display: grid; grid-template-columns: minmax(38px,1fr) 18px minmax(38px,1fr) 18px minmax(38px,1fr) 18px minmax(38px,1fr) 18px minmax(38px,1fr); align-items: center; gap: 3px; }
-    .flow-node { aspect-ratio: 1; max-width: 52px; width: 100%; justify-self: center; border: 1px solid currentColor; border-radius: 50%; display: grid; place-items: center; align-content: center; background: rgba(255,255,255,.025); }
-    .flow-node strong { font: 500 14px "Noto Serif SC", serif; }
-    .flow-node small { color: var(--muted); font-size: 9px; margin-top: 1px; font-variant-numeric: tabular-nums; }
+    .flow-node { aspect-ratio: 1; max-width: 64px; width: 100%; justify-self: center; border: 1px solid currentColor; border-radius: 50%; display: grid; place-items: center; align-content: center; background: rgba(255,255,255,.025); }
+    .flow-node strong { font: 500 18px "Noto Serif SC", serif; }
+    .flow-node small { color: var(--muted); font-size: 11px; margin-top: 2px; font-variant-numeric: tabular-nums; }
     .flow-node.is-strong { box-shadow: 0 0 0 3px rgba(233,191,117,.1); }
     .flow-node.is-weak { opacity: .58; border-style: dashed; }
-    .flow-edge { text-align: center; color: var(--faint); font-size: 16px; line-height: 1; }
-    .flow-edge span { display: block; font-size: 8px; margin-bottom: 2px; }
+    .flow-edge { text-align: center; color: var(--faint); font-size: 20px; line-height: 1; }
+    .flow-edge span { display: block; font-size: 10px; margin-bottom: 3px; }
     .flow-edge.is-open { color: var(--wood); }
     .flow-edge.is-blocked { color: var(--fire); }
     .flow-edge.is-weak { opacity: .45; }
-    .flow-caption { color: var(--muted); font-size: 10px; line-height: 1.5; margin: 10px 0 0; }
+    .flow-caption { color: var(--muted); font-size: 13px; line-height: 1.65; margin: 14px 0 0; }
     .flow-caption strong { color: var(--gold-soft); font-weight: 500; }
-    .relation-subtitle { display: flex; justify-content: space-between; align-items: center; margin: 15px 20px 0; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
-    .relation-subtitle b { color: var(--gold-soft); font-weight: 500; }
-    .flow-insights { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; padding: 10px 20px 0; }
-    .flow-insight { border-left: 2px solid currentColor; padding: 8px 10px; background: rgba(255,255,255,.02); min-height: 62px; }
-    .flow-insight strong { display: block; font: 500 12px "Noto Serif SC", serif; }
-    .flow-insight p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
-    .rule-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); column-gap: 18px; padding: 5px 20px 0; }
-    .rule-item { padding: 12px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+    .relation-subtitle { display: flex; justify-content: space-between; align-items: center; margin: 22px 24px 0; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .relation-subtitle b { color: var(--gold-soft); font-size: 15px; font-weight: 500; }
+    .flow-insights { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; padding: 14px 24px 0; }
+    .flow-insight { border-left: 2px solid currentColor; padding: 11px 12px; background: rgba(255,255,255,.02); min-height: 76px; }
+    .flow-insight strong { display: block; font: 500 14px "Noto Serif SC", serif; }
+    .flow-insight p { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .rule-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); column-gap: 22px; padding: 7px 24px 0; }
+    .rule-item { padding: 16px 0; border-bottom: 1px solid var(--line); min-width: 0; }
     .rule-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .rule-head strong { font: 500 12px "Noto Serif SC", serif; color: var(--gold-soft); }
-    .rule-state { color: var(--faint); font-size: 9px; white-space: nowrap; }
+    .rule-head strong { font: 500 15px "Noto Serif SC", serif; color: var(--gold-soft); }
+    .rule-state { color: var(--faint); font-size: 11px; white-space: nowrap; }
     .rule-item.is-hit .rule-state { color: var(--wood); }
-    .rule-results { margin-top: 7px; display: grid; gap: 5px; }
-    .rule-result { color: var(--text); font-size: 10px; line-height: 1.5; }
+    .rule-results { margin-top: 9px; display: grid; gap: 7px; }
+    .rule-result { color: var(--text); font-size: 12px; line-height: 1.65; }
     .rule-result i { color: var(--gold); font-style: normal; }
-    .rule-empty { color: var(--faint); font-size: 10px; margin-top: 7px; }
-    .rule-catalog { color: var(--faint); font-size: 9px; line-height: 1.55; margin-top: 7px; }
+    .rule-empty { color: var(--faint); font-size: 12px; margin-top: 9px; }
+    .rule-catalog { color: var(--faint); font-size: 11px; line-height: 1.65; margin-top: 9px; }
     .relation-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 14px 20px 0; }
     .relation { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 9px; padding: 12px; min-height: 85px; }
     .relation-top { display: flex; justify-content: space-between; align-items: center; gap: 7px; }
@@ -207,11 +215,13 @@
     .season-mark:nth-child(2) { left: 0; } .season-mark:nth-child(3) { left: 38%; } .season-mark:nth-child(4) { left: 68%; } .season-mark:nth-child(5) { right: 0; }
     .season-labels { display: flex; justify-content: space-between; color: var(--faint); font-size: 10px; }
 
-    @media (max-width: 1020px) {
+    @media (max-width: 1100px) {
+      .flow-insights, .rule-list { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 780px) {
       .dashboard { grid-template-columns: 1fr; }
-      .detail-column { grid-template-columns: 1fr 1fr; align-items: start; }
-      .detail-hero, .energy-panel, .relations-panel { grid-column: span 2; }
-      .season-panel { grid-column: span 2; }
+      .left-column, .right-column { height: auto; }
+      .left-column, .right-column { grid-template-rows: none; }
     }
     @media (max-width: 650px) {
       .app-shell { padding: 18px 12px 34px; }
@@ -232,8 +242,6 @@
       .day-note { font-size: 8px; }
       .cell-footer { margin-top: 4px; }
       .energy-mini { display: none; }
-      .detail-column { display: grid; grid-template-columns: 1fr; }
-      .detail-hero, .energy-panel, .season-panel, .relations-panel, .advice-panel { grid-column: auto; }
       .energy-content { grid-template-columns: 112px 1fr; gap: 12px; padding-left: 14px; padding-right: 14px; }
       .energy-wheel { width: 105px; height: 105px; }
       .relation-list { padding-left: 14px; padding-right: 14px; }
@@ -244,6 +252,12 @@
       .rule-list { grid-template-columns: 1fr; padding-left: 14px; padding-right: 14px; }
       .advice-grid { padding-left: 14px; padding-right: 14px; }
       .section-title { padding-left: 14px; padding-right: 14px; }
+    }
+    @media (max-width: 430px) {
+      .four-pill-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .flow-cycle { grid-template-columns: minmax(34px,1fr) 15px minmax(34px,1fr) 15px minmax(34px,1fr) 15px minmax(34px,1fr) 15px minmax(34px,1fr); gap: 1px; }
+      .flow-node strong { font-size: 16px; }
+      .flow-edge { font-size: 16px; }
     }
   </style>
 </head>
@@ -268,22 +282,9 @@
       </div>
 
       <div class="dashboard">
-        <section class="panel calendar-panel" aria-label="月历">
-          <div class="calendar-toolbar">
-            <div class="month-title"><span id="monthTitle">2026年 09月</span><small id="monthLunar">丙午年 · 八月</small></div>
-            <div class="month-nav"><button class="icon-button" id="prevMonth" aria-label="上个月" title="上个月">‹</button><button class="icon-button" id="nextMonth" aria-label="下个月" title="下个月">›</button></div>
-          </div>
-          <div class="calendar-quick-bar">
-            <label class="date-picker-wrap"><span>快速选择</span><input class="date-input" id="datePicker" type="date" min="1800-01-01" max="2200-12-31" aria-label="快速选择日期"></label>
-            <div class="quick-buttons" aria-label="快速日期"><button class="quick-button" data-date-offset="0">今日</button><button class="quick-button" data-date-offset="1">明日</button><button class="quick-button" data-date-offset="2">后日</button></div>
-          </div>
-          <div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
-          <div class="calendar-grid" id="calendarGrid"></div>
-          <div class="month-footer"><div class="legend"><span class="legend-item"><i class="dot" style="background:var(--wood)"></i>木</span><span class="legend-item"><i class="dot" style="background:var(--fire)"></i>火</span><span class="legend-item"><i class="dot" style="background:var(--earth)"></i>土</span><span class="legend-item"><i class="dot" style="background:var(--metal)"></i>金</span><span class="legend-item"><i class="dot" style="background:var(--water)"></i>水</span></div><button class="today-link" id="todayLink">定位今日 →</button></div>
-        </section>
-
-        <aside class="detail-column">
+        <div class="left-column">
           <section class="panel detail-hero">
+            <div class="module-heading"><h3>四柱八字</h3><span>年 · 月 · 日 · 时</span></div>
             <div class="detail-date"><div><h2 id="detailDate">九月十四 · 星期一</h2><p id="detailLunar">农历八月初三　丙午年 · 丁酉月</p></div><span class="focus-tag">已选日期</span></div>
             <div class="pill-row four-pill-row">
               <div class="four-pill"><small>年柱</small><strong id="yearPillar">丙午</strong><em id="yearElement">火 · 年</em></div>
@@ -294,6 +295,27 @@
             <div class="pill-row meta-pill-row"><span class="pill">纳音 <strong id="naYin">杨柳木</strong></span><span class="pill">胎神 <strong>房床碓</strong></span><span class="pill">本地时区 <strong id="localTimezone">本机</strong></span></div>
           </section>
 
+          <section class="panel calendar-panel" aria-label="月历">
+            <div class="calendar-toolbar">
+              <div class="month-title"><span id="monthTitle">2026年 09月</span><small id="monthLunar">丙午年 · 八月</small></div>
+              <div class="month-nav"><button class="icon-button" id="prevMonth" aria-label="上个月" title="上个月">‹</button><button class="icon-button" id="nextMonth" aria-label="下个月" title="下个月">›</button></div>
+            </div>
+            <div class="calendar-quick-bar">
+              <label class="date-picker-wrap"><span>快速选择</span><input class="date-input" id="datePicker" type="date" min="1800-01-01" max="2200-12-31" aria-label="快速选择日期"></label>
+              <div class="quick-buttons" aria-label="快速日期"><button class="quick-button" data-date-offset="0">今日</button><button class="quick-button" data-date-offset="1">明日</button><button class="quick-button" data-date-offset="2">后日</button></div>
+            </div>
+            <div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="month-footer"><div class="legend"><span class="legend-item"><i class="dot" style="background:var(--wood)"></i>木</span><span class="legend-item"><i class="dot" style="background:var(--fire)"></i>火</span><span class="legend-item"><i class="dot" style="background:var(--earth)"></i>土</span><span class="legend-item"><i class="dot" style="background:var(--metal)"></i>金</span><span class="legend-item"><i class="dot" style="background:var(--water)"></i>水</span></div><button class="today-link" id="todayLink">定位今日 →</button></div>
+          </section>
+
+          <section class="panel advice-panel">
+            <div class="section-title"><h3>今日取舍</h3><span id="adviceMeta">宜顺势而为</span></div>
+            <div class="advice-grid"><div class="advice-block"><label>宜</label><p id="goodAdvice">整理、沟通、定下长期计划</p></div><div class="advice-block avoid"><label>忌</label><p id="badAdvice">仓促签约、熬夜、情绪化决定</p></div></div>
+          </section>
+        </div>
+
+        <div class="right-column">
           <section class="panel energy-panel">
             <div class="section-title"><h3>今日五行能量</h3><span>月令旺衰 · 藏干计权</span></div>
             <div class="energy-content"><div class="energy-wheel" id="energyWheel"><div class="wheel-core"><strong id="balanceScore">82</strong><span>平衡指数</span></div></div><div class="energy-list" id="energyList"></div></div>
@@ -311,12 +333,7 @@
             <div class="relation-subtitle"><b>地支作用</b><span>四柱地支全量检查 · 合局看化势</span></div>
             <div class="rule-list" id="branchRelationList"></div>
           </section>
-
-          <section class="panel advice-panel">
-            <div class="section-title"><h3>今日取舍</h3><span id="adviceMeta">宜顺势而为</span></div>
-            <div class="advice-grid"><div class="advice-block"><label>宜</label><p id="goodAdvice">整理、沟通、定下长期计划</p></div><div class="advice-block avoid"><label>忌</label><p id="badAdvice">仓促签约、熬夜、情绪化决定</p></div></div>
-          </section>
-        </aside>
+        </div>
       </div>
 
       <section class="panel season-panel">
