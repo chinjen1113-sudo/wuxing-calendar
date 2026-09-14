@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>玄历 · 五行万年历</title>
+  <style>
+    :root {
+      --ink: #0f1518;
+      --ink-soft: #151e21;
+      --panel: #192528;
+      --panel-light: #203033;
+      --line: rgba(213, 229, 221, .12);
+      --line-strong: rgba(213, 229, 221, .2);
+      --text: #eef4ef;
+      --muted: #9baea6;
+      --faint: #657872;
+      --gold: #e9bf75;
+      --gold-soft: #f2d7a2;
+      --wood: #7ec5a2;
+      --fire: #ed936b;
+      --earth: #d7b36d;
+      --metal: #b8c9ca;
+      --water: #74a9ce;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--ink); }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 75% -10%, rgba(103, 148, 127, .16), transparent 32%),
+        linear-gradient(135deg, #0d1315 0%, #10191b 48%, #111a1d 100%);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+    button { font: inherit; color: inherit; }
+
+    .app-shell { min-height: 100vh; padding: 24px clamp(18px, 4vw, 62px) 50px; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 20px;
+      max-width: 1440px; margin: 0 auto 26px;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 40px; height: 40px; border: 1px solid rgba(233,191,117,.72); border-radius: 50%;
+      display: grid; place-items: center; color: var(--gold); position: relative;
+      background: rgba(233,191,117,.05); font-family: "Noto Serif SC", serif; font-size: 20px;
+    }
+    .brand-mark::after { content: ""; position: absolute; inset: 6px; border: 1px solid rgba(233,191,117,.3); border-radius: 50%; }
+    .brand-name { font-family: "Noto Serif SC", serif; font-size: 20px; letter-spacing: .12em; }
+    .brand-sub { color: var(--muted); font-size: 11px; margin-top: 3px; letter-spacing: .14em; }
+    .top-actions { display: flex; gap: 10px; align-items: center; }
+    .icon-button, .outline-button {
+      border: 1px solid var(--line-strong); background: rgba(255,255,255,.025); cursor: pointer;
+      transition: .2s ease; border-radius: 9px;
+    }
+    .icon-button { width: 38px; height: 38px; display: grid; place-items: center; color: var(--muted); font-size: 19px; }
+    .outline-button { padding: 9px 13px; color: var(--gold-soft); font-size: 13px; }
+    .icon-button:hover, .outline-button:hover { border-color: rgba(233,191,117,.62); color: var(--gold-soft); background: rgba(233,191,117,.08); }
+
+    .workspace { max-width: 1440px; margin: 0 auto; }
+    .heading-row { display: flex; justify-content: space-between; align-items: end; margin-bottom: 18px; gap: 20px; }
+    .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 9px; }
+    h1 { margin: 0; font: 400 clamp(26px, 3vw, 36px)/1.15 "Noto Serif SC", serif; letter-spacing: .04em; }
+    .heading-note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+    .date-chip { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .date-chip b { color: var(--gold-soft); font-size: 15px; font-weight: 500; }
+
+    .dashboard { display: grid; grid-template-columns: minmax(0, 1.37fr) minmax(370px, .83fr); gap: 16px; align-items: start; }
+    .panel { background: rgba(25,37,40,.86); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 16px 50px rgba(0,0,0,.12); }
+    .calendar-panel { padding: 20px; }
+    .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .month-title { font-family: "Noto Serif SC", serif; font-size: 21px; letter-spacing: .05em; }
+    .month-title small { color: var(--muted); font-family: Inter, sans-serif; font-size: 11px; margin-left: 9px; letter-spacing: .12em; }
+    .month-nav { display: flex; gap: 6px; }
+    .calendar-quick-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 11px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.018); }
+    .date-picker-wrap { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+    .date-picker-wrap span { color: var(--gold-soft); white-space: nowrap; }
+    .date-input { color-scheme: dark; color: var(--text); border: 1px solid var(--line-strong); border-radius: 7px; background: var(--ink-soft); padding: 6px 8px; font-size: 12px; min-height: 32px; }
+    .date-input:focus { outline: 2px solid rgba(233,191,117,.55); outline-offset: 1px; }
+    .quick-buttons { display: flex; align-items: center; gap: 5px; }
+    .quick-button { border: 1px solid var(--line-strong); border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; padding: 6px 9px; font-size: 11px; min-height: 32px; transition: .18s ease; }
+    .quick-button:hover { color: var(--gold-soft); border-color: rgba(233,191,117,.55); background: rgba(233,191,117,.07); }
+    .weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 7px; }
+    .weekdays { margin-bottom: 7px; }
+    .weekdays div { color: var(--faint); text-align: center; font-size: 11px; padding: 3px 0; }
+    .weekdays div:first-child, .weekdays div:last-child { color: #b28368; }
+    .day-cell {
+      position: relative; min-height: 94px; padding: 10px 9px 8px; border: 1px solid transparent; border-radius: 10px;
+      background: rgba(255,255,255,.018); cursor: pointer; transition: .18s ease; text-align: left;
+    }
+    .day-cell:hover { border-color: rgba(233,191,117,.4); background: rgba(233,191,117,.06); transform: translateY(-1px); }
+    .day-cell.is-empty { background: transparent; cursor: default; }
+    .day-cell.is-empty:hover { border-color: transparent; transform: none; }
+    .day-cell.is-selected { border-color: rgba(233,191,117,.88); background: linear-gradient(145deg, rgba(233,191,117,.14), rgba(115,169,142,.06)); box-shadow: inset 0 0 0 1px rgba(233,191,117,.1); }
+    .day-cell.is-today .solar { color: var(--gold); }
+    .solar-row { display: flex; justify-content: space-between; align-items: center; }
+    .solar { font-size: 17px; color: var(--text); }
+    .lunar { color: var(--muted); font-size: 10px; margin-top: 8px; }
+    .gan-zhi { color: var(--gold-soft); font: 11px "Noto Serif SC", serif; margin-top: 5px; }
+    .day-notes { display: flex; gap: 4px; flex-wrap: wrap; min-height: 13px; margin-top: 4px; overflow: hidden; }
+    .day-note { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; line-height: 1.25; }
+    .solar-note { color: var(--gold); }
+    .holiday-note { color: var(--fire); }
+    .cell-footer { display: flex; justify-content: space-between; align-items: end; margin-top: 8px; }
+    .element-dot { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .energy-mini { color: var(--faint); font-size: 10px; }
+    .month-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .legend { display: flex; gap: 13px; flex-wrap: wrap; }
+    .legend-item { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 5px; }
+    .today-link { border: 0; padding: 0; background: none; color: var(--gold); font-size: 12px; cursor: pointer; }
+    .today-link:hover { color: var(--gold-soft); }
+
+    .detail-column { display: grid; gap: 16px; }
+    .detail-hero { padding: 22px 22px 20px; position: relative; overflow: hidden; }
+    .detail-hero::after { content: "玄"; position: absolute; right: 17px; top: -28px; font: 140px/1 "Noto Serif SC", serif; color: rgba(233,191,117,.05); pointer-events: none; }
+    .detail-date { display: flex; justify-content: space-between; align-items: start; position: relative; z-index: 1; }
+    .detail-date h2 { margin: 0; font: 400 25px "Noto Serif SC", serif; letter-spacing: .04em; }
+    .detail-date p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .focus-tag { color: var(--ink); background: var(--gold); padding: 5px 8px; border-radius: 5px; font-size: 10px; letter-spacing: .1em; }
+    .pill-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 17px; position: relative; z-index: 1; }
+    .four-pill-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 7px; }
+    .four-pill { border: 1px solid var(--line-strong); border-radius: 10px; padding: 9px 8px 8px; background: rgba(255,255,255,.025); min-width: 0; }
+    .four-pill small { display: block; color: var(--muted); font-size: 10px; margin-bottom: 7px; }
+    .four-pill strong { display: block; font: 500 18px "Noto Serif SC", serif; letter-spacing: .06em; }
+    .four-pill strong i { font-style: normal; }
+    .four-pill em { display: block; color: var(--faint); font-size: 9px; font-style: normal; margin-top: 5px; }
+    .meta-pill-row { margin-top: 8px; }
+    .pill { border: 1px solid var(--line-strong); border-radius: 20px; padding: 6px 10px; color: var(--muted); font-size: 11px; }
+    .pill strong { color: var(--gold-soft); font-weight: 500; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; padding: 17px 20px 0; }
+    .section-title h3 { margin: 0; font: 400 15px "Noto Serif SC", serif; letter-spacing: .06em; }
+    .section-title span { color: var(--faint); font-size: 10px; letter-spacing: .08em; }
+    .energy-panel { padding-bottom: 19px; }
+    .energy-content { display: grid; grid-template-columns: 128px 1fr; gap: 20px; align-items: center; padding: 16px 20px 0; }
+    .energy-wheel { width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--wood) 0 23%, var(--fire) 23% 45%, var(--earth) 45% 65%, var(--metal) 65% 81%, var(--water) 81% 100%); position: relative; }
+    .energy-wheel::before { content: ""; position: absolute; inset: 10px; border-radius: 50%; background: var(--panel); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .wheel-core { position: relative; text-align: center; z-index: 1; }
+    .wheel-core strong { display: block; font-size: 26px; line-height: 1; font-weight: 500; color: var(--gold-soft); }
+    .wheel-core span { color: var(--muted); font-size: 10px; }
+    .energy-list { display: grid; gap: 10px; }
+    .energy-line { display: grid; grid-template-columns: 22px 1fr 38px; gap: 8px; align-items: center; font-size: 11px; }
+    .energy-label { font-family: "Noto Serif SC", serif; }
+    .bar { height: 5px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .bar i { display: block; height: 100%; border-radius: inherit; transition: width .35s ease; }
+    .energy-value { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .relations-panel { padding-bottom: 20px; }
+    .flow-block { padding: 14px 20px 2px; }
+    .flow-cycle { display: grid; grid-template-columns: minmax(38px,1fr) 18px minmax(38px,1fr) 18px minmax(38px,1fr) 18px minmax(38px,1fr) 18px minmax(38px,1fr); align-items: center; gap: 3px; }
+    .flow-node { aspect-ratio: 1; max-width: 52px; width: 100%; justify-self: center; border: 1px solid currentColor; border-radius: 50%; display: grid; place-items: center; align-content: center; background: rgba(255,255,255,.025); }
+    .flow-node strong { font: 500 14px "Noto Serif SC", serif; }
+    .flow-node small { color: var(--muted); font-size: 9px; margin-top: 1px; font-variant-numeric: tabular-nums; }
+    .flow-node.is-strong { box-shadow: 0 0 0 3px rgba(233,191,117,.1); }
+    .flow-node.is-weak { opacity: .58; border-style: dashed; }
+    .flow-edge { text-align: center; color: var(--faint); font-size: 16px; line-height: 1; }
+    .flow-edge span { display: block; font-size: 8px; margin-bottom: 2px; }
+    .flow-edge.is-open { color: var(--wood); }
+    .flow-edge.is-blocked { color: var(--fire); }
+    .flow-edge.is-weak { opacity: .45; }
+    .flow-caption { color: var(--muted); font-size: 10px; line-height: 1.5; margin: 10px 0 0; }
+    .flow-caption strong { color: var(--gold-soft); font-weight: 500; }
+    .relation-subtitle { display: flex; justify-content: space-between; align-items: center; margin: 15px 20px 0; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .relation-subtitle b { color: var(--gold-soft); font-weight: 500; }
+    .flow-insights { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; padding: 10px 20px 0; }
+    .flow-insight { border-left: 2px solid currentColor; padding: 8px 10px; background: rgba(255,255,255,.02); min-height: 62px; }
+    .flow-insight strong { display: block; font: 500 12px "Noto Serif SC", serif; }
+    .flow-insight p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .rule-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); column-gap: 18px; padding: 5px 20px 0; }
+    .rule-item { padding: 12px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+    .rule-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .rule-head strong { font: 500 12px "Noto Serif SC", serif; color: var(--gold-soft); }
+    .rule-state { color: var(--faint); font-size: 9px; white-space: nowrap; }
+    .rule-item.is-hit .rule-state { color: var(--wood); }
+    .rule-results { margin-top: 7px; display: grid; gap: 5px; }
+    .rule-result { color: var(--text); font-size: 10px; line-height: 1.5; }
+    .rule-result i { color: var(--gold); font-style: normal; }
+    .rule-empty { color: var(--faint); font-size: 10px; margin-top: 7px; }
+    .rule-catalog { color: var(--faint); font-size: 9px; line-height: 1.55; margin-top: 7px; }
+    .relation-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 14px 20px 0; }
+    .relation { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 9px; padding: 12px; min-height: 85px; }
+    .relation-top { display: flex; justify-content: space-between; align-items: center; gap: 7px; }
+    .relation-name { font: 13px "Noto Serif SC", serif; color: var(--gold-soft); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .relation-node { display: inline-flex; align-items: center; gap: 4px; }
+    .relation-node .dot { width: 7px; height: 7px; }
+    .relation-symbol { color: var(--muted); font-size: 11px; }
+    .relation-type { font-size: 11px; padding: 2px 4px; border-radius: 4px; background: rgba(255,255,255,.06); }
+    .relation-mark { color: var(--muted); font-size: 10px; padding: 3px 5px; border-radius: 4px; background: rgba(255,255,255,.06); }
+    .relation p { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 9px 0 0; }
+    .advice-panel { padding-bottom: 17px; }
+    .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 14px 20px 0; }
+    .advice-block { padding-left: 11px; border-left: 2px solid var(--wood); }
+    .advice-block.avoid { border-left-color: var(--fire); }
+    .advice-block label { color: var(--muted); font-size: 10px; }
+    .advice-block p { margin: 7px 0 0; color: var(--text); font-size: 12px; line-height: 1.55; }
+    .season-panel { margin-top: 16px; padding: 18px 20px 20px; }
+    .season-head { display: flex; justify-content: space-between; align-items: baseline; }
+    .season-head h3 { margin: 0; font: 400 15px "Noto Serif SC", serif; }
+    .season-head span { color: var(--muted); font-size: 11px; }
+    .season-track { height: 4px; background: rgba(255,255,255,.08); border-radius: 10px; position: relative; margin: 25px 4px 8px; }
+    .season-track i { display: block; width: 38%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--wood), var(--gold)); }
+    .season-mark { position: absolute; top: -4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--panel); background: var(--muted); }
+    .season-mark.active { background: var(--gold); box-shadow: 0 0 0 3px rgba(233,191,117,.15); }
+    .season-mark:nth-child(2) { left: 0; } .season-mark:nth-child(3) { left: 38%; } .season-mark:nth-child(4) { left: 68%; } .season-mark:nth-child(5) { right: 0; }
+    .season-labels { display: flex; justify-content: space-between; color: var(--faint); font-size: 10px; }
+
+    @media (max-width: 1020px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .detail-column { grid-template-columns: 1fr 1fr; align-items: start; }
+      .detail-hero, .energy-panel, .relations-panel { grid-column: span 2; }
+      .season-panel { grid-column: span 2; }
+    }
+    @media (max-width: 650px) {
+      .app-shell { padding: 18px 12px 34px; }
+      .topbar { margin-bottom: 22px; }
+      .brand-sub { display: none; }
+      .heading-row { display: block; }
+      .date-chip { margin-top: 13px; }
+      .calendar-panel { padding: 12px 9px 14px; }
+      .calendar-quick-bar { align-items: stretch; padding: 8px; }
+      .date-picker-wrap { width: 100%; justify-content: space-between; }
+      .date-input { flex: 1; max-width: 190px; }
+      .quick-buttons { width: 100%; }
+      .quick-button { flex: 1; }
+      .day-cell { min-height: 74px; padding: 7px 6px; }
+      .lunar { margin-top: 5px; font-size: 9px; }
+      .gan-zhi { font-size: 10px; margin-top: 3px; }
+      .day-notes { margin-top: 2px; }
+      .day-note { font-size: 8px; }
+      .cell-footer { margin-top: 4px; }
+      .energy-mini { display: none; }
+      .detail-column { display: grid; grid-template-columns: 1fr; }
+      .detail-hero, .energy-panel, .season-panel, .relations-panel, .advice-panel { grid-column: auto; }
+      .energy-content { grid-template-columns: 112px 1fr; gap: 12px; padding-left: 14px; padding-right: 14px; }
+      .energy-wheel { width: 105px; height: 105px; }
+      .relation-list { padding-left: 14px; padding-right: 14px; }
+      .flow-block { padding-left: 14px; padding-right: 14px; }
+      .flow-insights { padding-left: 14px; padding-right: 14px; }
+      .relation-subtitle { margin-left: 14px; margin-right: 14px; }
+      .flow-insights { grid-template-columns: 1fr; }
+      .rule-list { grid-template-columns: 1fr; padding-left: 14px; padding-right: 14px; }
+      .advice-grid { padding-left: 14px; padding-right: 14px; }
+      .section-title { padding-left: 14px; padding-right: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">玄</div>
+        <div><div class="brand-name">玄历</div><div class="brand-sub">五行 · 刑冲克害 · 节气</div></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" aria-label="搜索" title="搜索">⌕</button>
+        <button class="icon-button" aria-label="设置" title="设置">⚙</button>
+        <button class="outline-button" id="todayButton">回到今日</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="heading-row">
+        <div><div class="eyebrow">万年历 / 五行观</div><h1>把每一天，读成一张能量图</h1><p class="heading-note">干支、节气与五行关系，在日期之间流动。</p></div>
+        <div class="date-chip"><span>当前定位</span><b id="currentDateLabel">2026年09月14日</b></div>
+      </div>
+
+      <div class="dashboard">
+        <section class="panel calendar-panel" aria-label="月历">
+          <div class="calendar-toolbar">
+            <div class="month-title"><span id="monthTitle">2026年 09月</span><small id="monthLunar">丙午年 · 八月</small></div>
+            <div class="month-nav"><button class="icon-button" id="prevMonth" aria-label="上个月" title="上个月">‹</button><button class="icon-button" id="nextMonth" aria-label="下个月" title="下个月">›</button></div>
+          </div>
+          <div class="calendar-quick-bar">
+            <label class="date-picker-wrap"><span>快速选择</span><input class="date-input" id="datePicker" type="date" min="1800-01-01" max="2200-12-31" aria-label="快速选择日期"></label>
+            <div class="quick-buttons" aria-label="快速日期"><button class="quick-button" data-date-offset="0">今日</button><button class="quick-button" data-date-offset="1">明日</button><button class="quick-button" data-date-offset="2">后日</button></div>
+          </div>
+          <div class="weekdays"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="month-footer"><div class="legend"><span class="legend-item"><i class="dot" style="background:var(--wood)"></i>木</span><span class="legend-item"><i class="dot" style="background:var(--fire)"></i>火</span><span class="legend-item"><i class="dot" style="background:var(--earth)"></i>土</span><span class="legend-item"><i class="dot" style="background:var(--metal)"></i>金</span><span class="legend-item"><i class="dot" style="background:var(--water)"></i>水</span></div><button class="today-link" id="todayLink">定位今日 →</button></div>
+        </section>
+
+        <aside class="detail-column">
+          <section class="panel detail-hero">
+            <div class="detail-date"><div><h2 id="detailDate">九月十四 · 星期一</h2><p id="detailLunar">农历八月初三　丙午年 · 丁酉月</p></div><span class="focus-tag">已选日期</span></div>
+            <div class="pill-row four-pill-row">
+              <div class="four-pill"><small>年柱</small><strong id="yearPillar">丙午</strong><em id="yearElement">火 · 年</em></div>
+              <div class="four-pill"><small>月柱</small><strong id="monthPillar">戊戌</strong><em id="monthElement">土 · 月</em></div>
+              <div class="four-pill"><small>日柱</small><strong id="dayPillar">壬午</strong><em id="dayElement">水 · 日</em></div>
+              <div class="four-pill"><small>时柱</small><strong id="hourPillar">戊申</strong><em id="hourElement">土 · 时</em></div>
+            </div>
+            <div class="pill-row meta-pill-row"><span class="pill">纳音 <strong id="naYin">杨柳木</strong></span><span class="pill">胎神 <strong>房床碓</strong></span><span class="pill">本地时区 <strong id="localTimezone">本机</strong></span></div>
+          </section>
+
+          <section class="panel energy-panel">
+            <div class="section-title"><h3>今日五行能量</h3><span>月令旺衰 · 藏干计权</span></div>
+            <div class="energy-content"><div class="energy-wheel" id="energyWheel"><div class="wheel-core"><strong id="balanceScore">82</strong><span>平衡指数</span></div></div><div class="energy-list" id="energyList"></div></div>
+          </section>
+
+          <section class="panel relations-panel">
+            <div class="section-title"><h3>五行流通与作用</h3><span>生扶 · 刑冲克害</span></div>
+            <div class="flow-block">
+              <div class="flow-cycle" id="elementFlow" aria-label="五行相生流通图"></div>
+              <p class="flow-caption" id="flowCaption"></p>
+            </div>
+            <div class="flow-insights" id="flowInsights"></div>
+            <div class="relation-subtitle"><b>天干作用</b><span>四柱天干两两检查 · 合化看月令</span></div>
+            <div class="rule-list" id="stemRelationList"></div>
+            <div class="relation-subtitle"><b>地支作用</b><span>四柱地支全量检查 · 合局看化势</span></div>
+            <div class="rule-list" id="branchRelationList"></div>
+          </section>
+
+          <section class="panel advice-panel">
+            <div class="section-title"><h3>今日取舍</h3><span id="adviceMeta">宜顺势而为</span></div>
+            <div class="advice-grid"><div class="advice-block"><label>宜</label><p id="goodAdvice">整理、沟通、定下长期计划</p></div><div class="advice-block avoid"><label>忌</label><p id="badAdvice">仓促签约、熬夜、情绪化决定</p></div></div>
+          </section>
+        </aside>
+      </div>
+
+      <section class="panel season-panel">
+        <div class="season-head"><h3>节气进度</h3><span id="seasonNote">白露之后 · 秋意渐深</span></div>
+        <div class="season-track"><i id="seasonProgress"></i><b class="season-mark active"></b><b class="season-mark active"></b><b class="season-mark"></b><b class="season-mark"></b></div>
+        <div class="season-labels" id="seasonLabels"><span>立秋</span><span>白露</span><span>秋分</span><span>寒露</span></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const stems = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+    const branches = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    const stemElements = ['木','木','火','火','土','土','金','金','水','水'];
+    const branchElements = {子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
+    const elementColors = {木:'var(--wood)', 火:'var(--fire)', 土:'var(--earth)', 金:'var(--metal)', 水:'var(--water)'};
+    const elementNames = ['木','火','土','金','水'];
+    const hiddenStems = {
+      子:[['癸',1]], 丑:[['己',.6],['癸',.2],['辛',.2]], 寅:[['甲',.6],['丙',.2],['戊',.2]],
+      卯:[['乙',1]], 辰:[['戊',.6],['乙',.2],['癸',.2]], 巳:[['丙',.6],['戊',.2],['庚',.2]],
+      午:[['丁',.7],['己',.3]], 未:[['己',.6],['丁',.2],['乙',.2]], 申:[['庚',.6],['壬',.2],['戊',.2]],
+      酉:[['辛',1]], 戌:[['戊',.6],['辛',.2],['丁',.2]], 亥:[['壬',.7],['甲',.3]]
+    };
+    const seasonFactors = {
+      寅:{木:1.35,火:1.1,土:.9,金:.75,水:1.05}, 卯:{木:1.35,火:1.1,土:.9,金:.75,水:1.05}, 辰:{木:1.15,火:1.05,土:1.2,金:.85,水:.9},
+      巳:{木:1.05,火:1.35,土:1.1,金:.8,水:.7}, 午:{木:1.05,火:1.35,土:1.1,金:.8,水:.7}, 未:{木:.95,火:1.15,土:1.3,金:.9,水:.75},
+      申:{木:.8,火:.7,土:1.05,金:1.35,水:1.1}, 酉:{木:.8,火:.7,土:1.05,金:1.35,水:1.1}, 戌:{木:.8,火:.8,土:1.2,金:1.15,水:1.0},
+      亥:{木:1.1,火:.7,土:.85,金:1.05,水:1.35}, 子:{木:1.1,火:.7,土:.85,金:1.05,水:1.35}, 丑:{木:1.0,火:.75,土:1.2,金:1.1,水:1.15}
+    };
+    const naYins = ['海中金','炉中火','大林木','路旁土','剑锋金','山头火','涧下水','城头土','白蜡金','杨柳木','泉中水','屋上土'];
+    const generatesElement = {木:'火',火:'土',土:'金',金:'水',水:'木'};
+    const controlsElement = {木:'土',土:'水',水:'火',火:'金',金:'木'};
+    const stemCombinationRules = [
+      {members:['甲','己'],element:'土'}, {members:['乙','庚'],element:'金'}, {members:['丙','辛'],element:'水'},
+      {members:['丁','壬'],element:'木'}, {members:['戊','癸'],element:'火'}
+    ];
+    const stemClashRules = [['甲','庚'],['乙','辛'],['丙','壬'],['丁','癸']];
+    const branchTripleRules = [
+      {members:['申','子','辰'],element:'水'}, {members:['亥','卯','未'],element:'木'},
+      {members:['寅','午','戌'],element:'火'}, {members:['巳','酉','丑'],element:'金'}
+    ];
+    const branchMeetingRules = [
+      {members:['寅','卯','辰'],element:'木'}, {members:['巳','午','未'],element:'火'},
+      {members:['申','酉','戌'],element:'金'}, {members:['亥','子','丑'],element:'水'}
+    ];
+    const branchPairRules = {
+      六合:[{members:['子','丑'],element:'土'},{members:['寅','亥'],element:'木'},{members:['卯','戌'],element:'火'},{members:['辰','酉'],element:'金'},{members:['巳','申'],element:'水'},{members:['午','未'],element:'土'}],
+      六冲:[['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']],
+      六害:[['子','未'],['丑','午'],['寅','巳'],['卯','辰'],['申','亥'],['酉','戌']],
+      六破:[['子','酉'],['丑','辰'],['寅','亥'],['卯','午'],['巳','申'],['未','戌']]
+    };
+
+    const makeLocalDate = (year, month, day) => new Date(year, month, day, 12, 0, 0, 0);
+    const deviceNow = new Date();
+    const today = makeLocalDate(deviceNow.getFullYear(), deviceNow.getMonth(), deviceNow.getDate());
+    let viewDate = makeLocalDate(today.getFullYear(), today.getMonth(), 1);
+    let selectedDate = makeLocalDate(today.getFullYear(), today.getMonth(), today.getDate());
+    const fmt = (n) => String(n).padStart(2,'0');
+    const dateKey = (d) => `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}`;
+    const isSameDay = (a,b) => dateKey(a) === dateKey(b);
+    const solarTermNames = ['小寒','大寒','立春','雨水','惊蛰','春分','清明','谷雨','立夏','小满','芒种','夏至','小暑','大暑','立秋','处暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至'];
+    const fixedHolidayMap = {
+      '01-01':'元旦','02-14':'情人节','03-08':'妇女节','04-01':'愚人节','05-01':'劳动节',
+      '06-01':'儿童节','07-01':'建党节','08-01':'建军节','09-10':'教师节','10-01':'国庆节','12-25':'圣诞节'
+    };
+    const yearHolidayMap = { '2026-02-17':'春节' };
+    const lunarFormatter = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', { month: 'long', day: 'numeric' });
+    const lunarDayNames = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+    const monthBranches = ['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+    function pillarHtml(pillar) {
+      const stem = pillar[0], branch = pillar[1];
+      return `<i style="color:${elementColors[stemElements[stems.indexOf(stem)]]}">${stem}</i><i style="color:${elementColors[branchElements[branch]]}">${branch}</i>`;
+    }
+    function setPillar(id, pillar, elementId, suffix) {
+      document.getElementById(id).innerHTML = pillarHtml(pillar);
+      document.getElementById(elementId).textContent = `${stemElements[stems.indexOf(pillar[0])]} / ${branchElements[pillar[1]]} · ${suffix}`;
+    }
+    function lunarInfo(date) {
+      try {
+        const parts = lunarFormatter.formatToParts(date);
+        const month = parts.find(part => part.type === 'month')?.value || '';
+        const day = Number(parts.find(part => part.type === 'day')?.value || 1);
+        return { month, day: lunarDayNames[day - 1] || `${day}日`, text: `${month}${lunarDayNames[day - 1] || `${day}日`}` };
+      } catch (_) { return { month: '农历', day: '', text: '农历日期' }; }
+    }
+    function sunApparentLongitude(timestamp) {
+      const julianDay = timestamp / 86400000 + 2440587.5;
+      const centuries = (julianDay - 2451545) / 36525;
+      const radians = Math.PI / 180;
+      const meanLongitude = (280.46646 + 36000.76983 * centuries + .0003032 * centuries * centuries) % 360;
+      const meanAnomaly = (357.52911 + 35999.05029 * centuries - .0001537 * centuries * centuries) % 360;
+      const equation = (1.914602 - .004817 * centuries - .000014 * centuries * centuries) * Math.sin(meanAnomaly * radians)
+        + (.019993 - .000101 * centuries) * Math.sin(2 * meanAnomaly * radians)
+        + .000289 * Math.sin(3 * meanAnomaly * radians);
+      const omega = 125.04 - 1934.136 * centuries;
+      return ((meanLongitude + equation - .00569 - .00478 * Math.sin(omega * radians)) % 360 + 360) % 360;
+    }
+    // 迭代求太阳视黄经每增加 15 度的时刻，避免固定节气日造成跨日误差。
+    function solarTermDate(year, termIndex) {
+      if (year < 1800 || year > 2200) return null;
+      const targetLongitude = (285 + termIndex * 15) % 360;
+      const month = Math.floor(termIndex / 2);
+      const approximateDay = termIndex % 2 ? 20 : 6;
+      let timestamp = Date.UTC(year, month, approximateDay, 12);
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const difference = ((sunApparentLongitude(timestamp) - targetLongitude + 540) % 360) - 180;
+        timestamp -= difference / .98564736 * 86400000;
+      }
+      return new Date(timestamp);
+    }
+    function solarTermOnDate(date) {
+      for (let year = date.getFullYear() - 1; year <= date.getFullYear() + 1; year++) {
+        for (let termIndex = 0; termIndex < solarTermNames.length; termIndex++) {
+          const termDate = solarTermDate(year, termIndex);
+          if (termDate && termDate.getFullYear() === date.getFullYear() && termDate.getMonth() === date.getMonth() && termDate.getDate() === date.getDate()) return solarTermNames[termIndex];
+        }
+      }
+      return '';
+    }
+    function renderSeason(date) {
+      const timeline = [];
+      for (let year=date.getFullYear()-1; year<=date.getFullYear()+1; year++) {
+        solarTermNames.forEach((name,index) => timeline.push({name,date:solarTermDate(year,index)}));
+      }
+      timeline.sort((a,b) => a.date - b.date);
+      let latestIndex = 0;
+      timeline.forEach((term,index) => { if (term.date <= date) latestIndex = index; });
+      const startIndex = Math.max(0,Math.min(timeline.length-4,latestIndex-1));
+      const visible = timeline.slice(startIndex,startIndex+4);
+      const start = visible[0].date.getTime(), end = visible[3].date.getTime();
+      const progress = Math.max(0,Math.min(100,(date.getTime()-start)/(end-start)*100));
+      const latest = timeline[latestIndex], next = timeline[latestIndex+1];
+      const daysToNext = Math.max(0,Math.ceil((next.date-date)/86400000));
+      document.getElementById('seasonProgress').style.width = `${progress}%`;
+      document.getElementById('seasonNote').textContent = `${latest.name}之后 · 距${next.name}约${daysToNext}天`;
+      document.getElementById('seasonLabels').innerHTML = visible.map(term => `<span>${term.name}</span>`).join('');
+      document.querySelectorAll('.season-mark').forEach((mark,index) => mark.classList.toggle('active',visible[index].date <= date));
+    }
+    function getDayNotes(date) {
+      const monthDay = `${fmt(date.getMonth()+1)}-${fmt(date.getDate())}`;
+      return { solarTerm: solarTermOnDate(date), holiday: yearHolidayMap[dateKey(date)] || fixedHolidayMap[monthDay] || '' };
+    }
+    function dayPillar(date) {
+      const julianDay = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000) + 2440588;
+      const index = ((julianDay + 49) % 60 + 60) % 60;
+      return stems[index % 10] + branches[index % 12];
+    }
+    function solarYear(date) {
+      const lichun = solarTermDate(date.getFullYear(), 2);
+      return lichun && date < lichun ? date.getFullYear() - 1 : date.getFullYear();
+    }
+    function yearPillar(value) { const year = value instanceof Date ? solarYear(value) : value; const i = ((year - 4) % 60 + 60) % 60; return stems[i % 10] + branches[i % 12]; }
+    function monthPillar(date) {
+      const monthStarts = [{term:0,branch:'丑'},{term:2,branch:'寅'},{term:4,branch:'卯'},{term:6,branch:'辰'},{term:8,branch:'巳'},{term:10,branch:'午'},{term:12,branch:'未'},{term:14,branch:'申'},{term:16,branch:'酉'},{term:18,branch:'戌'},{term:20,branch:'亥'},{term:22,branch:'子'}];
+      let selected = {branch:'子'};
+      const previousDecember = solarTermDate(date.getFullYear() - 1, 22);
+      if (previousDecember && date >= previousDecember) selected = {branch:'子'};
+      monthStarts.forEach(({term,branch}) => { const boundary = solarTermDate(date.getFullYear(), term); if (boundary && date >= boundary) selected = {branch}; });
+      const yearStem = stems.indexOf(yearPillar(date)[0]);
+      const startStemByYearStem = {甲:2,己:2,乙:4,庚:4,丙:6,辛:6,丁:8,壬:8,戊:0,癸:0};
+      const branch = selected.branch;
+      const solarMonth = monthBranches.indexOf(branch);
+      const stem = stems[(startStemByYearStem[yearPillar(date)[0]] + solarMonth) % 10];
+      return stem + branch;
+    }
+    function hourPillar(date, hour) {
+      const branchIndex = Math.floor(((hour + 1) % 24) / 2);
+      const dayStem = stems.indexOf(dayPillar(date)[0]);
+      return stems[(dayStem * 2 + branchIndex) % 10] + branches[branchIndex];
+    }
+    function calculateFiveElements(pillars) {
+      const scores = Object.fromEntries(elementNames.map(name => [name, 0]));
+      const pillarWeights = { year:.15, month:.35, day:.35, hour:.15 };
+      Object.entries(pillars).forEach(([name, pillar]) => {
+        const weight = pillarWeights[name];
+        const stemElement = stemElements[stems.indexOf(pillar[0])];
+        scores[stemElement] += weight * .55;
+        hiddenStems[pillar[1]].forEach(([hiddenStem, ratio]) => { scores[stemElements[stems.indexOf(hiddenStem)]] += weight * .45 * ratio; });
+      });
+      const season = seasonFactors[pillars.month[1]] || {};
+      elementNames.forEach(name => { scores[name] *= season[name] || 1; });
+      const total = Object.values(scores).reduce((sum, value) => sum + value, 0);
+      const exact = elementNames.map(name => scores[name] / total * 100);
+      const energy = exact.map(value => Math.floor(value));
+      let remainder = 100 - energy.reduce((sum, value) => sum + value, 0);
+      exact.map((value, index) => ({index, fraction:value - Math.floor(value)})).sort((a,b) => b.fraction - a.fraction).forEach(({index}) => { if (remainder > 0) { energy[index] += 1; remainder -= 1; } });
+      const imbalance = energy.reduce((sum, value) => sum + Math.abs(value - 20), 0);
+      const score = Math.max(60, Math.min(96, 100 - Math.round(imbalance * .72)));
+      return { energy, score };
+    }
+    function renderElementFlow(data) {
+      const values = Object.fromEntries(elementNames.map((name,index) => [name,data.energy[index]]));
+      const maximum = Math.max(...data.energy), minimum = Math.min(...data.energy);
+      const flowState = (source,target) => {
+        if (values[source] < 10) return 'is-weak';
+        if (values[source] >= 20 && values[target] < 10) return 'is-blocked';
+        if (values[source] >= 12 && values[target] >= 8) return 'is-open';
+        return '';
+      };
+      let flowHtml = '';
+      elementNames.forEach((name,index) => {
+        const nodeState = values[name] === maximum ? ' is-strong' : values[name] === minimum ? ' is-weak' : '';
+        flowHtml += `<div class="flow-node${nodeState}" style="color:${elementColors[name]}" aria-label="${name}${values[name]}%"><strong>${name}</strong><small>${values[name]}%</small></div>`;
+        if (index < elementNames.length - 1) flowHtml += `<div class="flow-edge ${flowState(name,elementNames[index+1])}" aria-label="${name}生${elementNames[index+1]}"><span>生</span>→</div>`;
+      });
+      document.getElementById('elementFlow').innerHTML = flowHtml;
+
+      const edges = elementNames.map(source => ({ source, target:generatesElement[source], state:flowState(source,generatesElement[source]) }));
+      const blocked = edges.find(edge => edge.state === 'is-blocked');
+      const open = edges.filter(edge => edge.state === 'is-open').sort((a,b) => values[b.source] - values[a.source])[0];
+      const dominant = elementNames[data.energy.indexOf(maximum)];
+      const dominantTarget = generatesElement[dominant];
+      const summary = blocked
+        ? `<strong>${blocked.source}旺、${blocked.target}弱</strong>，${blocked.source}生${blocked.target}的承接不足，流通在此处受阻。`
+        : open
+          ? `<strong>${open.source}生${open.target}</strong>是当前较顺畅的生化路径；末端水再生木，构成完整循环。`
+          : `<strong>${dominant}气最显</strong>，主要向${dominantTarget}泄秀，整体生化力量偏弱。`;
+      document.getElementById('flowCaption').innerHTML = summary;
+
+      const occurrences = Object.fromEntries(elementNames.map(name => [name,[]]));
+      const pillarLabels = {year:'年',month:'月',day:'日',hour:'时'};
+      Object.entries(data.pillars).forEach(([position,pillar]) => {
+        occurrences[stemElements[stems.indexOf(pillar[0])]].push(`${pillarLabels[position]}干`);
+        occurrences[branchElements[pillar[1]]].push(`${pillarLabels[position]}支`);
+      });
+      const support = elementNames.slice().sort((a,b) => occurrences[b].length - occurrences[a].length || values[b] - values[a])[0];
+      const generatedState = values[dominantTarget] < 8 ? '承接偏弱' : values[dominantTarget] >= 20 ? '生化有力' : '流通平稳';
+      const controlled = controlsElement[dominant];
+      const controlState = values[dominant] > values[controlled] * 1.6 ? '制约偏重' : values[dominant] < values[controlled] ? '反受其耗' : '制化相对平衡';
+      document.getElementById('flowInsights').innerHTML = `
+        <article class="flow-insight" style="color:${elementColors[dominant]}"><strong>生 · ${dominant}生${dominantTarget}</strong><p>${dominant} ${values[dominant]}% → ${dominantTarget} ${values[dominantTarget]}%，${generatedState}。</p></article>
+        <article class="flow-insight" style="color:${elementColors[support]}"><strong>扶 · ${support}助${support}</strong><p>${occurrences[support].join('、')}同类相扶，共见 ${occurrences[support].length} 处。</p></article>
+        <article class="flow-insight" style="color:${elementColors[controlled]}"><strong>克 · ${dominant}克${controlled}</strong><p>${dominant} ${values[dominant]}% → ${controlled} ${values[controlled]}%，${controlState}。</p></article>`;
+    }
+    function transformationAssessment(element,data,{complete=true,adjacent=true}={}) {
+      if (!complete) return '组合未全，不作合化';
+      const factor = seasonFactors[data.pillars.month[1]][element] || 1;
+      const percentage = data.energy[elementNames.indexOf(element)];
+      if (!adjacent) return `遥合，${element}气${percentage}%：合力较远，暂按合而不化`;
+      if (factor >= 1.15 && percentage >= 15) return `${element}得令且有根：有化势，不直接定化`;
+      if (factor >= 1 && percentage >= 22) return `${element}有根但未旺：有化意，尚不足以定化`;
+      return `${element}失令或根气不足：合而不化`;
+    }
+    function coloredEntry(entry,isStem) {
+      const element = isStem ? stemElements[stems.indexOf(entry.value)] : branchElements[entry.value];
+      return `<span style="color:${elementColors[element]}">${entry.label}${entry.value}·${element}</span>`;
+    }
+    function ruleItem(name,results,catalog) {
+      return `<section class="rule-item${results.length ? ' is-hit' : ''}"><div class="rule-head"><strong>${name}</strong><span class="rule-state">${results.length ? `命中 ${results.length}` : '本日未见'}</span></div>${results.length ? `<div class="rule-results">${results.map(result => `<div class="rule-result">${result}</div>`).join('')}</div>` : '<div class="rule-empty">四柱中没有形成此关系</div>'}<div class="rule-catalog">规则：${catalog}</div></section>`;
+    }
+    function matchingPairs(entries,rules) {
+      const matches = [];
+      for (let left=0; left<entries.length; left++) for (let right=left+1; right<entries.length; right++) {
+        rules.forEach(ruleValue => {
+          const rule = ruleValue.members || ruleValue;
+          if (rule.includes(entries[left].value) && rule.includes(entries[right].value) && entries[left].value !== entries[right].value) matches.push({left:entries[left],right:entries[right],rule:ruleValue,distance:right-left});
+        });
+      }
+      return matches;
+    }
+    function renderTraditionalRelations(data) {
+      const positionNames = {year:'年',month:'月',day:'日',hour:'时'};
+      const stemEntries = Object.entries(data.pillars).map(([position,pillar]) => ({label:`${positionNames[position]}干`,value:pillar[0]}));
+      const branchEntries = Object.entries(data.pillars).map(([position,pillar]) => ({label:`${positionNames[position]}支`,value:pillar[1]}));
+
+      const stemCombines = matchingPairs(stemEntries,stemCombinationRules).map(match => {
+        const element = match.rule.element;
+        return `${coloredEntry(match.left,true)} ＋ ${coloredEntry(match.right,true)} <i>${match.rule.members.join('')}合${element}</i>；${transformationAssessment(element,data,{adjacent:match.distance===1})}`;
+      });
+      const stemClashes = matchingPairs(stemEntries,stemClashRules).map(match => `${coloredEntry(match.left,true)} ↔ ${coloredEntry(match.right,true)} <i>${match.rule.join('')}相冲</i>`);
+      document.getElementById('stemRelationList').innerHTML = [
+        ruleItem('天干五合',stemCombines,'甲己合土；乙庚合金；丙辛合水；丁壬合木；戊癸合火'),
+        ruleItem('天干四冲',stemClashes,'甲庚冲；乙辛冲；丙壬冲；丁癸冲')
+      ].join('');
+
+      const uniqueBranches = new Set(branchEntries.map(entry => entry.value));
+      const tripleResults = [];
+      branchTripleRules.forEach(rule => {
+        const present = rule.members.filter(branch => uniqueBranches.has(branch));
+        if (present.length < 2) return;
+        const participants = branchEntries.filter(entry => present.includes(entry.value)).map(entry => coloredEntry(entry,false)).join('、');
+        if (present.length === 3) tripleResults.push(`${participants} <i>${rule.members.join('')}三合${rule.element}局</i>；${transformationAssessment(rule.element,data)}`);
+        else {
+          const mode = present.includes(rule.members[1]) ? '半合' : '拱合';
+          tripleResults.push(`${participants} <i>${present.join('')}${mode}${rule.element}</i>；${transformationAssessment(rule.element,data,{complete:false})}`);
+        }
+      });
+      const combineResults = matchingPairs(branchEntries,branchPairRules.六合).map(match => `${coloredEntry(match.left,false)} ＋ ${coloredEntry(match.right,false)} <i>${match.rule.members.join('')}六合${match.rule.element}</i>；${transformationAssessment(match.rule.element,data,{adjacent:match.distance===1})}`);
+      const branchPairResult = type => matchingPairs(branchEntries,branchPairRules[type]).map(match => `${coloredEntry(match.left,false)} ↔ ${coloredEntry(match.right,false)} <i>${match.rule.join('')}${type.slice(1)}</i>`);
+      const meetingResults = [];
+      branchMeetingRules.forEach(rule => {
+        const present = rule.members.filter(branch => uniqueBranches.has(branch));
+        if (present.length < 2) return;
+        const participants = branchEntries.filter(entry => present.includes(entry.value)).map(entry => coloredEntry(entry,false)).join('、');
+        meetingResults.push(present.length === 3
+          ? `${participants} <i>${rule.members.join('')}三会${rule.element}方</i>；${transformationAssessment(rule.element,data)}`
+          : `${participants} <i>${present.join('')}会势未全</i>；组合未全，不作合化`);
+      });
+      const punishmentResults = [];
+      [{members:['寅','巳','申'],name:'无恩之刑'},{members:['丑','未','戌'],name:'恃势之刑'}].forEach(rule => {
+        const present = rule.members.filter(branch => uniqueBranches.has(branch));
+        if (present.length >= 2) punishmentResults.push(`${branchEntries.filter(entry => present.includes(entry.value)).map(entry => coloredEntry(entry,false)).join('、')} <i>${present.join('')}见${rule.name}</i>`);
+      });
+      if (uniqueBranches.has('子') && uniqueBranches.has('卯')) punishmentResults.push(`${branchEntries.filter(entry => ['子','卯'].includes(entry.value)).map(entry => coloredEntry(entry,false)).join('、')} <i>子卯无礼之刑</i>`);
+      ['辰','午','酉','亥'].forEach(branch => {
+        const repeated = branchEntries.filter(entry => entry.value === branch);
+        if (repeated.length >= 2) punishmentResults.push(`${repeated.map(entry => coloredEntry(entry,false)).join('、')} <i>${branch}${branch}自刑</i>`);
+      });
+      document.getElementById('branchRelationList').innerHTML = [
+        ruleItem('地支三合',tripleResults,'申子辰合水；亥卯未合木；寅午戌合火；巳酉丑合金'),
+        ruleItem('地支六合',combineResults,'子丑合土；寅亥合木；卯戌合火；辰酉合金；巳申合水；午未合土'),
+        ruleItem('地支六冲',branchPairResult('六冲'),'子午；丑未；寅申；卯酉；辰戌；巳亥'),
+        ruleItem('地支六害',branchPairResult('六害'),'子未；丑午；寅巳；卯辰；申亥；酉戌'),
+        ruleItem('地支六破',branchPairResult('六破'),'子酉；丑辰；寅亥；卯午；巳申；未戌'),
+        ruleItem('地支三会',meetingResults,'寅卯辰会木；巳午未会火；申酉戌会金；亥子丑会水'),
+        ruleItem('地支相刑',punishmentResults,'寅巳申无恩之刑；丑未戌恃势之刑；子卯无礼之刑；辰、午、酉、亥自刑')
+      ].join('');
+    }
+    function getData(date) {
+      const pillar = dayPillar(date); const branch = pillar[1]; const stem = pillar[0];
+      const hour = isSameDay(date, today) ? deviceNow.getHours() : 12;
+      const pillars = { year:yearPillar(date), month:monthPillar(date), day:pillar, hour:hourPillar(date, hour) };
+      const { energy, score } = calculateFiveElements(pillars);
+      const element = stemElements[stems.indexOf(stem)];
+      return { pillar, branch, stem, element, energy, score, pillars };
+    }
+    function renderCalendar() {
+      const year = viewDate.getFullYear(), month = viewDate.getMonth();
+      document.getElementById('monthTitle').textContent = `${year}年 ${fmt(month+1)}月`;
+      document.getElementById('monthLunar').textContent = `${yearPillar(makeLocalDate(year, month, 15))}年 · ${lunarInfo(makeLocalDate(year, month, 15)).month}`;
+      document.getElementById('datePicker').value = dateKey(selectedDate);
+      const first = makeLocalDate(year, month, 1); const lastDay = makeLocalDate(year, month + 1, 0).getDate();
+      let html = '';
+      for (let i=0; i<first.getDay(); i++) html += '<div class="day-cell is-empty" aria-hidden="true"></div>';
+      for (let day=1; day<=lastDay; day++) {
+        const d = makeLocalDate(year, month, day); const data = getData(d); const selected = isSameDay(d, selectedDate); const isToday = isSameDay(d, today);
+        const notes = getDayNotes(d);
+        const noteHtml = `${notes.solarTerm ? `<span class="day-note solar-note">${notes.solarTerm}</span>` : ''}${notes.holiday ? `<span class="day-note holiday-note">${notes.holiday}</span>` : ''}`;
+        html += `<button class="day-cell${selected ? ' is-selected' : ''}${isToday ? ' is-today' : ''}" data-day="${day}" aria-label="${year}年${month+1}月${day}日${notes.solarTerm ? ' '+notes.solarTerm : ''}${notes.holiday ? ' '+notes.holiday : ''}">
+          <span class="solar-row"><span class="solar">${day}</span>${isToday ? '<span style="font-size:10px;color:var(--gold)">今</span>' : ''}</span>
+          <div class="lunar">${lunarInfo(d).day}</div><div class="gan-zhi">${data.pillar}</div><div class="day-notes">${noteHtml}</div>
+          <div class="cell-footer"><span class="element-dot"><i class="dot" style="background:${elementColors[data.element]}"></i>${data.element}</span><span class="energy-mini">${data.score}</span></div>
+        </button>`;
+      }
+      document.getElementById('calendarGrid').innerHTML = html;
+      document.querySelectorAll('[data-day]').forEach(btn => btn.addEventListener('click', () => { selectedDate = makeLocalDate(year, month, Number(btn.dataset.day)); renderCalendar(); renderDetail(); }));
+    }
+    function renderDetail() {
+      const d = selectedDate, data = getData(d), weekday = new Intl.DateTimeFormat('zh-CN', { weekday: 'long' }).format(d);
+      document.getElementById('currentDateLabel').textContent = `${d.getFullYear()}年${fmt(d.getMonth()+1)}月${fmt(d.getDate())}日`;
+      document.getElementById('detailDate').textContent = `${d.getMonth()+1}月${d.getDate()}日 · ${weekday}`;
+      const yPillar = data.pillars.year, mPillar = data.pillars.month, hPillar = data.pillars.hour;
+      document.getElementById('detailLunar').textContent = `农历${lunarInfo(d).text}　${yPillar}年 · ${mPillar}月`;
+      setPillar('yearPillar', yPillar, 'yearElement', '年');
+      setPillar('monthPillar', mPillar, 'monthElement', '月');
+      setPillar('dayPillar', data.pillar, 'dayElement', '日');
+      setPillar('hourPillar', hPillar, 'hourElement', isSameDay(d, today) ? `${deviceNow.getHours()}时` : '午时');
+      document.getElementById('localTimezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '本机';
+      document.getElementById('naYin').textContent = naYins[(stems.indexOf(data.stem) + branches.indexOf(data.branch)) % naYins.length];
+      document.getElementById('balanceScore').textContent = data.score;
+      const colors = ['木','火','土','金','水'];
+      document.getElementById('energyList').innerHTML = colors.map((name,i) => `<div class="energy-line"><span class="energy-label" style="color:${elementColors[name]}">${name}</span><div class="bar"><i style="width:${data.energy[i]}%;background:${elementColors[name]}"></i></div><span class="energy-value">${data.energy[i]}%</span></div>`).join('');
+      const conic = []; let acc = 0; colors.forEach((name,i)=>{ conic.push(`${elementColors[name]} ${acc}% ${acc+data.energy[i]}%`); acc += data.energy[i]; });
+      document.getElementById('energyWheel').style.background = `conic-gradient(${conic.join(',')})`;
+      renderElementFlow(data);
+      renderTraditionalRelations(data);
+      const isFire = data.element === '火';
+      document.getElementById('adviceMeta').textContent = isFire ? '宜收敛锋芒' : '宜顺势而为';
+      document.getElementById('goodAdvice').textContent = isFire ? '表达、复盘、完成需要推动的事' : '整理、沟通、定下长期计划';
+      document.getElementById('badAdvice').textContent = isFire ? '连续做决定、过量饮酒、忽略休息' : '仓促签约、熬夜、情绪化决定';
+      renderSeason(d);
+    }
+    function selectDate(date) { selectedDate = makeLocalDate(date.getFullYear(), date.getMonth(), date.getDate()); viewDate = makeLocalDate(date.getFullYear(), date.getMonth(), 1); renderCalendar(); renderDetail(); }
+    function parseDateInput(value) { const [year, month, day] = value.split('-').map(Number); return year && month && day ? makeLocalDate(year, month - 1, day) : null; }
+    function goToday() { selectDate(today); }
+    document.getElementById('prevMonth').addEventListener('click', () => { viewDate = makeLocalDate(viewDate.getFullYear(), viewDate.getMonth()-1, 1); renderCalendar(); });
+    document.getElementById('nextMonth').addEventListener('click', () => { viewDate = makeLocalDate(viewDate.getFullYear(), viewDate.getMonth()+1, 1); renderCalendar(); });
+    document.getElementById('todayButton').addEventListener('click', goToday); document.getElementById('todayLink').addEventListener('click', goToday);
+    document.getElementById('datePicker').addEventListener('change', (event) => { const date = parseDateInput(event.target.value); if (date) selectDate(date); });
+    document.querySelectorAll('[data-date-offset]').forEach(button => button.addEventListener('click', () => { const date = makeLocalDate(today.getFullYear(), today.getMonth(), today.getDate() + Number(button.dataset.dateOffset)); selectDate(date); }));
+    renderCalendar(); renderDetail();
+  </script>
+</body>
+</html>
