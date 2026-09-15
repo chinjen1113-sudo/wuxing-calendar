@@ -153,6 +153,20 @@
     .bar { height: 5px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
     .bar i { display: block; height: 100%; border-radius: inherit; transition: width .35s ease; }
     .energy-value { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .hourly-wave-wrap { padding: 20px 20px 0; }
+    .hourly-wave-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+    .hourly-wave-head strong { color: var(--gold-soft); font: 400 13px "Noto Serif SC", serif; }
+    .hourly-wave-head span { color: var(--faint); font-size: 10px; }
+    .hourly-wave { display: block; width: 100%; height: 230px; overflow: visible; }
+    .hourly-wave .wave-grid { stroke: rgba(213,229,221,.11); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .hourly-wave .wave-axis { fill: var(--faint); font: 11px Inter, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .hourly-wave .wave-axis-title { fill: var(--muted); font: 11px Inter, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .hourly-wave .wave-line { fill: none; stroke-width: 2.2; vector-effect: non-scaling-stroke; }
+    .hourly-wave .wave-point { stroke: var(--panel); stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+    .hourly-wave .wave-current { stroke: rgba(233,191,117,.65); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+    .hourly-wave-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 1px 0 17px; }
+    .hourly-wave-legend span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; }
+    .hourly-wave-legend i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
     .relations-panel { padding-bottom: 24px; min-width: 0; }
     .relations-panel .section-title { padding-top: 22px; }
     .relations-panel .section-title h3 { font-size: 20px; }
@@ -244,6 +258,8 @@
       .energy-mini { display: none; }
       .energy-content { grid-template-columns: 112px 1fr; gap: 12px; padding-left: 14px; padding-right: 14px; }
       .energy-wheel { width: 105px; height: 105px; }
+      .hourly-wave-wrap { padding-left: 14px; padding-right: 14px; }
+      .hourly-wave { height: 220px; }
       .relation-list { padding-left: 14px; padding-right: 14px; }
       .flow-block { padding-left: 14px; padding-right: 14px; }
       .flow-insights { padding-left: 14px; padding-right: 14px; }
@@ -319,6 +335,14 @@
           <section class="panel energy-panel">
             <div class="section-title"><h3>今日五行能量</h3><span>月令旺衰 · 藏干计权</span></div>
             <div class="energy-content"><div class="energy-wheel" id="energyWheel"><div class="wheel-core"><strong id="balanceScore">82</strong><span>平衡指数</span></div></div><div class="energy-list" id="energyList"></div></div>
+            <div class="hourly-wave-wrap" aria-live="polite">
+              <div class="hourly-wave-head"><strong>十二时辰能量波形</strong><span id="hourlyWaveMeta">每两小时采样 · 0–100%</span></div>
+              <svg class="hourly-wave" id="hourlyWave" role="img" aria-labelledby="hourlyWaveTitle hourlyWaveDesc" viewBox="0 0 640 230" preserveAspectRatio="none">
+                <title id="hourlyWaveTitle">十二时辰五行能量波形</title>
+                <desc id="hourlyWaveDesc">按子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥十二时辰展示木火土金水能量百分比变化。</desc>
+              </svg>
+              <div class="hourly-wave-legend" id="hourlyWaveLegend" aria-label="波形图五行图例"></div>
+            </div>
           </section>
 
           <section class="panel relations-panel">
@@ -403,6 +427,8 @@
     const lunarFormatter = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', { month: 'long', day: 'numeric' });
     const lunarDayNames = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
     const monthBranches = ['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+    const hourBranches = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    const hourRanges = ['23-01','01-03','03-05','05-07','07-09','09-11','11-13','13-15','15-17','17-19','19-21','21-23'];
     function pillarHtml(pillar) {
       const stem = pillar[0], branch = pillar[1];
       return `<i style="color:${elementColors[stemElements[stems.indexOf(stem)]]}">${stem}</i><i style="color:${elementColors[branchElements[branch]]}">${branch}</i>`;
@@ -523,6 +549,85 @@
       const imbalance = energy.reduce((sum, value) => sum + Math.abs(value - 20), 0);
       const score = Math.max(60, Math.min(96, 100 - Math.round(imbalance * .72)));
       return { energy, score };
+    }
+    function hourlyEnergyData(date, data) {
+      const fixedPillars = { year:data.pillars.year, month:data.pillars.month, day:data.pillars.day };
+      return hourBranches.map((branch, index) => {
+        const hour = index * 2;
+        const pillars = { ...fixedPillars, hour:hourPillar(date, hour) };
+        const result = calculateFiveElements(pillars);
+        return { branch, range:hourRanges[index], hour, energy:result.energy, score:result.score };
+      });
+    }
+    function smoothWavePath(points) {
+      if (!points.length) return '';
+      let path = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+      for (let index = 1; index < points.length; index++) {
+        const previous = points[index - 1];
+        const before = points[index - 2] || previous;
+        const current = points[index];
+        const after = points[index + 1] || current;
+        const controlOne = { x:previous.x + (current.x - before.x) / 6, y:previous.y + (current.y - before.y) / 6 };
+        const controlTwo = { x:current.x - (after.x - previous.x) / 6, y:current.y - (after.y - previous.y) / 6 };
+        path += ` C ${controlOne.x.toFixed(2)} ${controlOne.y.toFixed(2)}, ${controlTwo.x.toFixed(2)} ${controlTwo.y.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;
+      }
+      return path;
+    }
+    let hourlyWaveSnapshot = null;
+    let hourlyWaveResizeObserver = null;
+    function drawHourlyWave() {
+      const svg = document.getElementById('hourlyWave');
+      if (!svg || !hourlyWaveSnapshot) return;
+      const { date, hourly } = hourlyWaveSnapshot;
+      const width = Math.max(1, Math.round(svg.clientWidth || svg.getBoundingClientRect().width || 640));
+      const height = 230;
+      const margin = { left:28, right:8, top:18, bottom:38 };
+      const plotWidth = Math.max(1, width - margin.left - margin.right);
+      const plotHeight = height - margin.top - margin.bottom;
+      const x = index => margin.left + (plotWidth * index / (hourBranches.length - 1));
+      const y = value => margin.top + ((100 - value) / 100 * plotHeight);
+      const currentIndex = isSameDay(date, today) ? Math.floor(deviceNow.getHours() / 2) : -1;
+      let html = '';
+      [0,25,50,75,100].forEach(value => {
+        const yPosition = y(value);
+        html += `<line class="wave-grid" x1="${margin.left}" y1="${yPosition.toFixed(2)}" x2="${(width - margin.right).toFixed(2)}" y2="${yPosition.toFixed(2)}"></line>`;
+        html += `<text class="wave-axis" x="${margin.left - 7}" y="${(yPosition + 4).toFixed(2)}" text-anchor="end">${value}%</text>`;
+      });
+      html += `<text class="wave-axis-title" x="3" y="12">能量</text>`;
+      html += `<line class="wave-grid" x1="${margin.left}" y1="${(height - margin.bottom).toFixed(2)}" x2="${(width - margin.right).toFixed(2)}" y2="${(height - margin.bottom).toFixed(2)}"></line>`;
+      if (currentIndex >= 0) {
+        const currentX = x(currentIndex);
+        html += `<line class="wave-current" x1="${currentX.toFixed(2)}" y1="${margin.top}" x2="${currentX.toFixed(2)}" y2="${(height - margin.bottom).toFixed(2)}"><title>当前时辰：${hourBranches[currentIndex]}时（${hourRanges[currentIndex]}）</title></line>`;
+      }
+      hourBranches.forEach((branch, index) => {
+        const xPosition = x(index);
+        html += `<text class="wave-axis" x="${xPosition.toFixed(2)}" y="${(height - 14).toFixed(2)}" text-anchor="middle">${branch}</text>`;
+      });
+      elementNames.forEach((element, elementIndex) => {
+        const points = hourly.map((entry, index) => ({ x:x(index), y:y(entry.energy[elementIndex]), value:entry.energy[elementIndex] }));
+        html += `<path class="wave-line" d="${smoothWavePath(points)}" stroke="${elementColors[element]}" aria-label="${element}五行能量波形"></path>`;
+        points.forEach((point, index) => {
+          const entry = hourly[index];
+          const values = entry.energy.map((value, valueIndex) => `${elementNames[valueIndex]}${value}%`).join('、');
+          html += `<circle class="wave-point" cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="3.2" fill="${elementColors[element]}"><title>${entry.branch}时（${entry.range}） · ${values}</title></circle>`;
+        });
+      });
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.innerHTML = html;
+    }
+    function renderHourlyWave(date, data) {
+      const hourly = hourlyEnergyData(date, data);
+      hourlyWaveSnapshot = { date, hourly };
+      const meta = document.getElementById('hourlyWaveMeta');
+      if (meta) meta.textContent = `${date.getMonth()+1}月${date.getDate()}日 · 每两小时采样`;
+      const legend = document.getElementById('hourlyWaveLegend');
+      if (legend && !legend.childElementCount) legend.innerHTML = elementNames.map(element => `<span><i style="background:${elementColors[element]}"></i>${element}</span>`).join('');
+      drawHourlyWave();
+      const svg = document.getElementById('hourlyWave');
+      if (svg && !hourlyWaveResizeObserver && 'ResizeObserver' in window) {
+        hourlyWaveResizeObserver = new ResizeObserver(drawHourlyWave);
+        hourlyWaveResizeObserver.observe(svg);
+      }
     }
     function renderElementFlow(data) {
       const values = Object.fromEntries(elementNames.map((name,index) => [name,data.energy[index]]));
@@ -698,6 +803,7 @@
       document.getElementById('energyList').innerHTML = colors.map((name,i) => `<div class="energy-line"><span class="energy-label" style="color:${elementColors[name]}">${name}</span><div class="bar"><i style="width:${data.energy[i]}%;background:${elementColors[name]}"></i></div><span class="energy-value">${data.energy[i]}%</span></div>`).join('');
       const conic = []; let acc = 0; colors.forEach((name,i)=>{ conic.push(`${elementColors[name]} ${acc}% ${acc+data.energy[i]}%`); acc += data.energy[i]; });
       document.getElementById('energyWheel').style.background = `conic-gradient(${conic.join(',')})`;
+      renderHourlyWave(d, data);
       renderElementFlow(data);
       renderTraditionalRelations(data);
       const isFire = data.element === '火';
